@@ -1,0 +1,92 @@
+# ===========================================================================
+#  ElysiumCore - configuration
+#  All chat text supports '&' colour codes. Placeholders are documented inline.
+# ===========================================================================
+
+economy:
+  # Balance given to a player the first time they are seen (new join, first /bal, /eco target).
+  starting-balance: 500.00
+  # Hard ceiling for any single balance. Transfers/grants that would exceed it are refused.
+  max-balance: 1000000000000.00
+  # Prepended to every formatted amount, e.g. "$1,234.56".
+  currency-symbol: "$"
+  # How often unsaved data is written to data.yml (seconds). Set to 0 to disable periodic saving.
+  # Data is always saved on server shutdown.
+  auto-save-seconds: 300
+
+teleport:
+  # A /tpa request is discarded this many seconds after it was sent.
+  request-timeout-seconds: 60
+
+anti-xray:
+  # Number of diamond-ore breaks allowed inside the rolling window before punishing.
+  max-diamond-ore: 15
+  # Rolling window length in seconds.
+  window-seconds: 60
+  # Punishment duration in seconds (diamond ore keeps turning to stone while active).
+  punishment-seconds: 300
+  # Alert broadcast to holders of elysium.admin.alerts. %player% is replaced with the name.
+  alert: '&c[ElysiumAlert] Player %player% is mining diamonds too quickly! X-Ray suspected.'
+
+admin:
+  # How often (in ticks) the /invsee view refreshes from the target's live inventory.
+  # Refresh is skipped while the viewer holds a cursor item or a click is being flushed.
+  invsee-refresh-ticks: 10
+
+vanish:
+  # Broadcast when an admin enables vanish (nobody sees them any more).
+  fake-leave-message: '&e%player% left the game'
+  # Broadcast when an admin disables vanish.
+  fake-join-message: '&e%player% joined the game'
+
+# ---------------------------------------------------------------------------
+#  Messages
+#  The prefix is prepended to every command reply. Set to '' to disable it.
+# ---------------------------------------------------------------------------
+messages:
+  prefix: '&8[&6Elysium&8] &r'
+
+  # Generic
+  player-only: '&cOnly players can use this command.'
+  no-permission: '&cYou do not have permission to use this command.'
+  player-not-found: '&cPlayer &f%player% &cwas not found.'
+  invalid-amount: '&cThat is not a valid amount.'
+
+  # Economy
+  balance: '&7Your balance: &a%amount%'
+  pay-self: '&cYou cannot pay yourself.'
+  pay-insufficient: '&cYou do not have enough money. You need &f%amount%&c.'
+  pay-sent: '&aYou sent &f%amount% &ato &f%player%&a.'
+  pay-received: '&aYou received &f%amount% &afrom &f%player%&a.'
+  balance-limit: '&cThat would exceed the maximum balance of &f%max%&c.'
+  eco-give: '&aGave &f%amount% &ato &f%player%&a. New balance: &f%balance%'
+  eco-take: '&aTook &f%amount% &afrom &f%player%&a. New balance: &f%balance%'
+  eco-set: '&aSet &f%player%&a''s balance to &f%amount%&a.'
+  eco-insufficient: '&c%player% does not have enough money for that.'
+
+  # Usages
+  usage-pay: '&7Usage: &f/pay <player> <amount>'
+  usage-eco: '&7Usage: &f/eco <give|take|set> <player> <amount>'
+  usage-tpa: '&7Usage: &f/tpa <player>'
+  usage-invsee: '&7Usage: &f/invsee <player>'
+
+  # Teleport requests
+  tpa-sent: '&aTeleport request sent to &f%player%&a.'
+  tpa-received: '&f%player% &7wants to teleport to you. &a/tpaccept &7or &c/tpdeny'
+  tpa-self: '&cYou cannot send a teleport request to yourself.'
+  tpa-none: '&cYou have no pending teleport request.'
+  tpa-expired: '&cThe teleport request with &f%player% &chas expired.'
+  tpa-accepted: '&aYour teleport request to &f%player% &awas accepted.'
+  tpa-accepted-target: '&aYou accepted &f%player%&a''s teleport request.'
+  tpa-denied: '&cYour teleport request to &f%player% &cwas denied.'
+  tpa-denied-target: '&cYou denied &f%player%&c''s teleport request.'
+  tpa-sender-offline: '&cThat player is no longer online.'
+
+  # Admin suite
+  fly-enabled: '&aFlight enabled.'
+  fly-disabled: '&cFlight disabled.'
+  vanish-enabled: '&aYou are now vanished.'
+  vanish-disabled: '&cYou are no longer vanished.'
+  invsee-self: '&cYou cannot inspect your own inventory.'
+  invsee-opened: '&7Opened &f%player%&7''s inventory.'
+  invsee-target-offline: '&cThat player is no longer online.'

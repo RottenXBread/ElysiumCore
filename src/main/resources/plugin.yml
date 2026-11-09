@@ -1,0 +1,70 @@
+name: ElysiumCore
+version: ${project.version}
+main: com.elysium.core.ElysiumCore
+api-version: '1.21'
+loadbefore: [Vault]
+softdepend: [Vault]
+author: Elysium
+description: Lightweight all-in-one plugin - economy, TPA, admin suite and passive anti-Xray.
+website: https://example.com/elysiumcore
+
+commands:
+  balance:
+    description: Show your current balance.
+    usage: /balance
+    aliases: [bal]
+  pay:
+    description: Transfer money to an online player.
+    usage: /pay <player> <amount>
+  eco:
+    description: Administer player balances.
+    usage: /eco <give|take|set> <player> <amount>
+    permission: elysium.admin.eco
+  tpa:
+    description: Ask another player to teleport to them.
+    usage: /tpa <player>
+  tpaccept:
+    description: Accept the most recent incoming teleport request.
+    usage: /tpaccept
+  tpdeny:
+    description: Deny the most recent incoming teleport request.
+    usage: /tpdeny
+  fly:
+    description: Toggle your flight.
+    usage: /fly
+    permission: elysium.admin.fly
+  vanish:
+    description: Toggle vanish mode.
+    usage: /vanish
+    aliases: [v]
+    permission: elysium.admin.vanish
+  invsee:
+    description: Open a live view of another player's inventory.
+    usage: /invsee <player>
+    permission: elysium.admin.invsee
+
+permissions:
+  elysium.admin:
+    description: Grants every ElysiumCore administrative feature.
+    default: op
+    children:
+      elysium.admin.eco: true
+      elysium.admin.fly: true
+      elysium.admin.vanish: true
+      elysium.admin.invsee: true
+      elysium.admin.alerts: true
+  elysium.admin.eco:
+    description: Allows use of /eco to give, take and set balances.
+    default: op
+  elysium.admin.fly:
+    description: Allows use of /fly.
+    default: op
+  elysium.admin.vanish:
+    description: Allows use of /vanish.
+    default: op
+  elysium.admin.invsee:
+    description: Allows use of /invsee.
+    default: op
+  elysium.admin.alerts:
+    description: Receives anti-Xray punishment alerts.
+    default: op

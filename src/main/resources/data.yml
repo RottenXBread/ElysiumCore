@@ -1,0 +1,20 @@
+# ===========================================================================
+#  ElysiumCore - persistent data
+#  This file is written by the plugin. Manual edits are possible but the
+#  plugin must be stopped first, otherwise pending changes overwrite them.
+# ===========================================================================
+
+# Player balances keyed by UUID, stored as plain decimal strings.
+# Example:
+#   balances:
+#     069a79f4-44e9-4726-a5be-fca90e38aaf5: '1234.56'
+balances: {}
+
+# Last known player name per UUID, used by /eco to reach offline players.
+last-known-names: {}
+
+# UUIDs of admins that are currently vanished. Kept across restarts.
+vanished: []
+
+# Anti-Xray punishment expiry timestamps (epoch milliseconds) keyed by UUID.
+anti-xray-punishments: {}
