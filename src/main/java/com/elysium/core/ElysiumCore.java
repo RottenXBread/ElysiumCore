@@ -32,11 +32,6 @@ import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
 import java.util.Objects;
 
-/**
- * ElysiumCore entry point.
- *
- * All core server features are initialized here and registered to their respective layouts.
- */
 public final class ElysiumCore extends JavaPlugin {
 
     private DataStore dataStore;
@@ -54,7 +49,6 @@ public final class ElysiumCore extends JavaPlugin {
 
     @Override
     public void onEnable() {
-        // Config first: managers read their settings in their constructors.
         saveDefaultConfig();
         if (!new File(getDataFolder(), "data.yml").exists()) {
             saveResource("data.yml", false);
@@ -81,13 +75,10 @@ public final class ElysiumCore extends JavaPlugin {
         registerListeners();
         startTasks();
 
-        // Re-hide admins that were vanished before the restart.
         vanishManager.applyOnEnable();
 
-        // Expose ElysiumCore as a Vault economy provider when Vault is installed.
         registerVaultEconomy();
 
-        // Flush the parsed data back into a clean structure on first start.
         dataStore.saveNow();
 
         getLogger().info("ElysiumCore enabled - economy, TPA, admin tools and anti-Xray are ready.");
@@ -97,19 +88,16 @@ public final class ElysiumCore extends JavaPlugin {
     public void onDisable() {
         cancelTasks();
 
-        // Close GUI views first: this flushes pending inventory edits.
         if (inventorySeeManager != null) {
             inventorySeeManager.shutdown();
         }
         if (vanishManager != null) {
-            // Restore visibility but keep the vanished set for the next start.
             vanishManager.restoreVisibility();
         }
         if (teleportManager != null) {
             teleportManager.clear();
         }
 
-        // Persist all state one last time.
         if (economyManager != null) {
             economyManager.save();
         }
@@ -126,10 +114,6 @@ public final class ElysiumCore extends JavaPlugin {
         getLogger().info("ElysiumCore disabled - data saved.");
     }
 
-    // ------------------------------------------------------------------
-    // Wiring
-    // ------------------------------------------------------------------
-
     private void registerCommands() {
         register("balance", new BalanceCommand(economyManager, messages));
         register("pay", new PayCommand(economyManager, messages));
@@ -144,7 +128,6 @@ public final class ElysiumCore extends JavaPlugin {
         register("invsee", new InvseeCommand(inventorySeeManager, messages));
     }
 
-    /** Attaches executor and tab completer to a command from plugin.yml. */
     private void register(String name, CommandExecutor executor) {
         PluginCommand command = getCommand(name);
         if (command == null) {
@@ -165,20 +148,15 @@ public final class ElysiumCore extends JavaPlugin {
     }
 
     private void startTasks() {
-        // Periodic data flush - only writes when something is dirty.
         long autoSaveSeconds = getConfig().getLong("economy.auto-save-seconds", 300L);
         if (autoSaveSeconds > 0) {
             long ticks = autoSaveSeconds * 20L;
             autoSaveTask = getServer().getScheduler().runTaskTimer(this, dataStore::saveIfDirty, ticks, ticks);
         }
 
-        // Drop expired /tpa requests once per second and notify both sides.
-        teleportExpiryTask = getServer().getScheduler()
-                .runTaskTimer(this, teleportManager::tick, 20L, 20L);
+        teleportExpiryTask = getServer().getScheduler().runTaskTimer(this, teleportManager::tick, 20L, 20L);
 
-        // Purge expired anti-Xray punishments and stale timestamps every 30 seconds.
-        antiXrayCleanupTask = getServer().getScheduler()
-                .runTaskTimer(this, antiXrayManager::cleanup, 600L, 600L);
+        antiXrayCleanupTask = getServer().getScheduler().runTaskTimer(this, antiXrayManager::cleanup, 600L, 600L);
     }
 
     private void cancelTasks() {
@@ -196,50 +174,21 @@ public final class ElysiumCore extends JavaPlugin {
         }
     }
 
-    // ------------------------------------------------------------------
-    // Accessors
-    // ------------------------------------------------------------------
+    public EconomyManager getEconomyManager() { return economyManager; }
+    public TeleportManager getTeleportManager() { return teleportManager; }
+    public VanishManager getVanishManager() { return vanishManager; }
+    public InventorySeeManager getInventorySeeManager() { return inventorySeeManager; }
+    public AntiXrayManager getAntiXrayManager() { return antiXrayManager; }
+    public Messages getMessages() { return messages; }
+    public DataStore getDataStore() { return dataStore; }
 
-    public EconomyManager getEconomyManager() {
-        return economyManager;
-    }
-
-    public TeleportManager getTeleportManager() {
-        return teleportManager;
-    }
-
-    public VanishManager getVanishManager() {
-        return vanishManager;
-    }
-
-    public InventorySeeManager getInventorySeeManager() {
-        return inventorySeeManager;
-    }
-
-    public AntiXrayManager getAntiXrayManager() {
-        return antiXrayManager;
-    }
-
-    public Messages getMessages() {
-        return messages;
-    }
-
-    public DataStore getDataStore() {
-        return dataStore;
-    }
-
-    // ------------------------------------------------------------------
-    // Vault economy bridge (Reflective Implementation)
-    // ------------------------------------------------------------------
-
-     private void registerVaultEconomy() {
+    private void registerVaultEconomy() {
         if (getServer().getPluginManager().getPlugin("Vault") == null) {
             return;
         }
         try {
             Class<?> vaultEconomyClass = Class.forName("com.elysium.core.economy.VaultEconomy");
-            Constructor<?> constructor = vaultEconomyClass.getConstructor(
-                    ElysiumCore.class, com.elysium.core.economy.EconomyManager.class);
+            Constructor<?> constructor = vaultEconomyClass.getConstructor(ElysiumCore.class, com.elysium.core.economy.EconomyManager.class);
             Object provider = constructor.newInstance(this, this.economyManager);
             
             getServer().getServicesManager().register(
@@ -253,9 +202,6 @@ public final class ElysiumCore extends JavaPlugin {
 
                 | IllegalAccessException | InvocationTargetException exception) {
             getLogger().warning("Vault economy registration skipped: " + exception.getMessage());
-        }
-    }
-
         }
     }
 }
