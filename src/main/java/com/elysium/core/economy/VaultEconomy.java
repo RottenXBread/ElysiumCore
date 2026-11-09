@@ -13,15 +13,6 @@ import java.util.Collections;
 import java.util.List;
 import java.util.UUID;
 
-/**
- * Vault-facing economy implementation that reads from and writes to ElysiumCore's
- * own {@link EconomyManager} and {@link DataStore}.
- *
- * <p>This class is loaded reflectively from {@link ElysiumCore} only when Vault is
- * present on the server, so the absence of Vault can never prevent ElysiumCore from
- * loading. It is intentionally placed in the economy package next to the manager it
- * wraps.</p>
- */
 public final class VaultEconomy implements Economy {
 
     private final ElysiumCore plugin;
@@ -67,18 +58,10 @@ public final class VaultEconomy implements Economy {
         return "Credit";
     }
 
-    // ------------------------------------------------------------------
-    // Account lookup
-    // ------------------------------------------------------------------
-
     private UUID uuidFor(String name) {
-        if (name == null) {
-            return null;
-        }
+        if (name == null) return null;
         OfflinePlayer exact = Bukkit.getPlayerExact(name);
-        if (exact != null) {
-            return exact.getUniqueId();
-        }
+        if (exact != null) return exact.getUniqueId();
         return manager.findKnownUuid(name);
     }
 
@@ -121,16 +104,6 @@ public final class VaultEconomy implements Economy {
     }
 
     @Override
-    public boolean playerExists(String playerName) {
-        return uuidFor(playerName) != null;
-    }
-
-    @Override
-    public boolean playerExists(UUID uuid) {
-        return uuid != null && manager.hasAccount(uuid);
-    }
-
-    @Override
     public boolean playerExists(Player player) {
         return player != null && manager.hasAccount(player.getUniqueId());
     }
@@ -138,9 +111,7 @@ public final class VaultEconomy implements Economy {
     @Override
     public boolean createPlayerAccount(String playerName) {
         UUID uuid = uuidFor(playerName);
-        if (uuid == null) {
-            return false;
-        }
+        if (uuid == null) return false;
         manager.createAccountIfAbsent(uuid, playerName);
         return true;
     }
@@ -160,25 +131,6 @@ public final class VaultEconomy implements Economy {
     public boolean createPlayerAccount(OfflinePlayer player, String worldName) {
         return createPlayerAccount(player);
     }
-
-    @Override
-    public boolean playerExists(String playerName) {
-        return uuidFor(playerName) != null;
-    }
-
-    @Override
-    public boolean playerExists(UUID uuid) {
-        return uuid != null && manager.hasAccount(uuid);
-    }
-
-    @Override
-    public boolean playerExists(Player player) {
-        return player != null && manager.hasAccount(player.getUniqueId());
-    }
-
-    // ------------------------------------------------------------------
-    // Balance
-    // ------------------------------------------------------------------
 
     @Deprecated
     @Override
@@ -236,10 +188,6 @@ public final class VaultEconomy implements Economy {
         return manager.getBalance(uuid).compareTo(BigDecimal.valueOf(amount)) >= 0;
     }
 
-    // ------------------------------------------------------------------
-    // Transactions
-    // ------------------------------------------------------------------
-
     @Deprecated
     @Override
     public EconomyResponse withdrawPlayer(String playerName, double amount) {
@@ -288,140 +236,74 @@ public final class VaultEconomy implements Economy {
 
     @Override
     public EconomyResponse createTransaction(OfflinePlayer receiver, OfflinePlayer sender, double amount, String overlay) {
-        return createTransaction(receiver.getUniqueId(), sender.getUniqueId(), amount, overlay);
-    }
-
-    private EconomyResponse createTransaction(UUID receiverUuid, UUID senderUuid, double amount, String overlay) {
-        if (receiverUuid == null || senderUuid == null) {
-            return notImplemented("Unknown player");
-        }
+        if (receiver == null || sender == null) return notImplemented("Unknown player");
         BigDecimal transferred = asPlainBigDecimal(amount);
-        double before = toDouble(manager.getBalance(receiverUuid));
-        EconomyManager.TransferResult result = manager.transfer(senderUuid, receiverUuid, transferred);
+        double before = toDouble(manager.getBalance(receiver.getUniqueId()));
+        EconomyManager.TransferResult result = manager.transfer(sender.getUniqueId(), receiver.getUniqueId(), transferred);
         return switch (result) {
-            case SUCCESS -> successResponse(amount, toDouble(manager.getBalance(receiverUuid)));
-            case INSUFFICIENT_FUNDS -> new EconomyResponse(
-                    amount, before, EconomyResponse.ResponseType.FAILURE, "Insufficient funds");
-            case BALANCE_LIMIT -> new EconomyResponse(
-                    amount, before, EconomyResponse.ResponseType.FAILURE, "Balance limit reached");
+            case SUCCESS -> successResponse(amount, toDouble(manager.getBalance(receiver.getUniqueId())));
+            case INSUFFICIENT_FUNDS -> new EconomyResponse(amount, before, EconomyResponse.ResponseType.FAILURE, "Insufficient funds");
+            case BALANCE_LIMIT -> new EconomyResponse(amount, before, EconomyResponse.ResponseType.FAILURE, "Balance limit reached");
         };
     }
 
-    @Override
-    public boolean playerExists(Player player) {
-        return player != null && manager.hasAccount(player.getUniqueId());
-    }
-
-    // ------------------------------------------------------------------
-    // Banks (ElysiumCore has no bank concept)
-    // ------------------------------------------------------------------
-
     @Deprecated
     @Override
-    public EconomyResponse createBank(String name, String player) {
-        return notImplemented("Banks are not supported by ElysiumCore");
-    }
-
+    public EconomyResponse createBank(String name, String player) { return notImplemented("No banks"); }
     @Override
-    public EconomyResponse createBank(String name, OfflinePlayer player) {
-        return notImplemented("Banks are not supported by ElysiumCore");
-    }
-
+    public EconomyResponse createBank(String name, OfflinePlayer player) { return notImplemented("No banks"); }
     @Override
-    public EconomyResponse deleteBank(String name) {
-        return notImplemented("Banks are not supported by ElysiumCore");
-    }
-
+    public EconomyResponse deleteBank(String name) { return notImplemented("No banks"); }
     @Override
-    public EconomyResponse bankBalance(String name) {
-        return notImplemented("Banks are not supported by ElysiumCore");
-    }
-
+    public EconomyResponse bankBalance(String name) { return notImplemented("No banks"); }
     @Override
-    public EconomyResponse bankHas(String name, double amount) {
-        return notImplemented("Banks are not supported by ElysiumCore");
-    }
-
+    public EconomyResponse bankHas(String name, double amount) { return notImplemented("No banks"); }
     @Override
-    public EconomyResponse bankWithdraw(String name, double amount) {
-        return notImplemented("Banks are not supported by ElysiumCore");
-    }
-
+    public EconomyResponse bankWithdraw(String name, double amount) { return notImplemented("No banks"); }
     @Override
-    public EconomyResponse bankDeposit(String name, double amount) {
-        return notImplemented("Banks are not supported by ElysiumCore");
-    }
-
+    public EconomyResponse bankDeposit(String name, double amount) { return notImplemented("No banks"); }
     @Deprecated
     @Override
-    public EconomyResponse isBankOwner(String name, String playerName) {
-        return notImplemented("Banks are not supported by ElysiumCore");
-    }
-
+    public EconomyResponse isBankOwner(String name, String playerName) { return notImplemented("No banks"); }
     @Override
-    public EconomyResponse isBankOwner(String name, OfflinePlayer player) {
-        return notImplemented("Banks are not supported by ElysiumCore");
-    }
-
+    public EconomyResponse isBankOwner(String name, OfflinePlayer player) { return notImplemented("No banks"); }
     @Deprecated
     @Override
-    public EconomyResponse isBankMember(String name, String playerName) {
-        return notImplemented("Banks are not supported by ElysiumCore");
-    }
-
+    public EconomyResponse isBankMember(String name, String playerName) { return notImplemented("No banks"); }
     @Override
-    public EconomyResponse isBankMember(String name, OfflinePlayer player) {
-        return notImplemented("Banks are not supported by ElysiumCore");
-    }
-
+    public EconomyResponse isBankMember(String name, OfflinePlayer player) { return notImplemented("No banks"); }
     @Override
-    public List<String> getBanks() {
-        return Collections.emptyList();
-    }
-
-    // ------------------------------------------------------------------
-    // Internal helpers
-    // ------------------------------------------------------------------
+    public List<String> getBanks() { return Collections.emptyList(); }
 
     private EconomyResponse withdraw(UUID uuid, double amount) {
-        if (uuid == null) {
-            return notImplemented("Unknown player");
-        }
+        if (uuid == null) return notImplemented("Unknown player");
         BigDecimal decrement = asPlainBigDecimal(amount);
         double balanceBefore = toDouble(manager.getBalance(uuid));
         if (manager.withdraw(uuid, decrement)) {
             return successResponse(amount, toDouble(manager.getBalance(uuid)));
         }
-        return new EconomyResponse(amount, balanceBefore, EconomyResponse.ResponseType.FAILURE,
-                "Insufficient funds");
+        return new EconomyResponse(amount, balanceBefore, EconomyResponse.ResponseType.FAILURE, "Insufficient funds");
     }
 
     private EconomyResponse deposit(UUID uuid, double amount) {
-        if (uuid == null) {
-            return notImplemented("Unknown player");
-        }
+        if (uuid == null) return notImplemented("Unknown player");
         BigDecimal increment = asPlainBigDecimal(amount);
         double balanceBefore = toDouble(manager.getBalance(uuid));
         if (manager.deposit(uuid, increment)) {
             return successResponse(amount, toDouble(manager.getBalance(uuid)));
         }
-        return new EconomyResponse(amount, balanceBefore, EconomyResponse.ResponseType.FAILURE,
-                "Balance limit reached");
+        return new EconomyResponse(amount, balanceBefore, EconomyResponse.ResponseType.FAILURE, "Balance limit reached");
     }
 
-    private static EconomyResponse successResponse(double amount, double balance) {
-        return new EconomyResponse(amount, balance, EconomyResponse.ResponseType.SUCCESS, null);
-    }
-
-    private static EconomyResponse notImplemented(String reason) {
-        return new EconomyResponse(0.0, 0.0, EconomyResponse.ResponseType.NOT_IMPLEMENTED, reason);
-    }
-
-    private static BigDecimal asPlainBigDecimal(double value) {
-        return BigDecimal.valueOf(value).setScale(2, RoundingMode.HALF_UP);
-    }
-
-    private static double toDouble(BigDecimal value) {
-        return value == null ? 0.0 : value.doubleValue();
-    }
+    private static EconomyResponse successResponse(double amount, double balance) {return new EconomyResponse(amount, balance, EconomyResponse.ResponseType.SUCCESS, null);
+}
+private static EconomyResponse notImplemented(String reason) {
+return new EconomyResponse(0.0, 0.0, EconomyResponse.ResponseType.NOT_IMPLEMENTED, reason);
+}
+private static BigDecimal asPlainBigDecimal(double value) {
+return BigDecimal.valueOf(value).setScale(2, RoundingMode.HALF_UP);
+}
+private static double toDouble(BigDecimal value) {
+return value == null ? 0.0 : value.doubleValue();
+}
 }
