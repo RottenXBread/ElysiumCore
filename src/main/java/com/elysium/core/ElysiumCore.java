@@ -35,16 +35,7 @@ import java.util.Objects;
 /**
  * ElysiumCore entry point.
  *
- * <p>Everything is created here and handed to the individual managers so no component
- * needs to reach for global state:</p>
- * <ul>
- *   <li>{@link DataStore} - data.yml persistence with a dirty flag and autosave,</li>
- *   <li>{@link EconomyManager} - BigDecimal balances and last known names,</li>
- *   <li>{@link TeleportManager} - transient /tpa requests,</li>
- *   <li>{@link VanishManager} - persisted vanish state and visibility,</li>
- *   <li>{@link InventorySeeManager} - live /invsee views,</li>
- *   <li>{@link AntiXrayManager} - passive diamond-ore heuristics.</li>
- * </ul>
+ * All core server features are initialized here and registered to their respective layouts.
  */
 public final class ElysiumCore extends JavaPlugin {
 
@@ -94,12 +85,9 @@ public final class ElysiumCore extends JavaPlugin {
         vanishManager.applyOnEnable();
 
         // Expose ElysiumCore as a Vault economy provider when Vault is installed.
-        // This class is loaded reflectively on purpose so the absence of Vault can
-        // never prevent ElysiumCore itself from enabling.
         registerVaultEconomy();
 
-        // Flush the parsed data back into a clean structure on first start so the file
-        // always contains all four sections even when empty.
+        // Flush the parsed data back into a clean structure on first start.
         dataStore.saveNow();
 
         getLogger().info("ElysiumCore enabled - economy, TPA, admin tools and anti-Xray are ready.");
@@ -109,13 +97,12 @@ public final class ElysiumCore extends JavaPlugin {
     public void onDisable() {
         cancelTasks();
 
-        // Close GUI views first: this flushes pending inventory edits while players are
-        // still online, and returns any held cursor item to its owner.
+        // Close GUI views first: this flushes pending inventory edits.
         if (inventorySeeManager != null) {
             inventorySeeManager.shutdown();
         }
         if (vanishManager != null) {
-            // Restore visibility but keep the persisted vanish set for the next start.
+            // Restore visibility but keep the vanished set for the next start.
             vanishManager.restoreVisibility();
         }
         if (teleportManager != null) {
@@ -157,7 +144,7 @@ public final class ElysiumCore extends JavaPlugin {
         register("invsee", new InvseeCommand(inventorySeeManager, messages));
     }
 
-    /** Attaches executor and (when implemented) tab completer to a command from plugin.yml. */
+    /** Attaches executor and tab completer to a command from plugin.yml. */
     private void register(String name, CommandExecutor executor) {
         PluginCommand command = getCommand(name);
         if (command == null) {
@@ -210,7 +197,7 @@ public final class ElysiumCore extends JavaPlugin {
     }
 
     // ------------------------------------------------------------------
-    // Accessors (useful for future modules / debugging)
+    // Accessors
     // ------------------------------------------------------------------
 
     public EconomyManager getEconomyManager() {
@@ -242,18 +229,9 @@ public final class ElysiumCore extends JavaPlugin {
     }
 
     // ------------------------------------------------------------------
-    // Vault economy bridge (optional, reflective)
+    // Vault economy bridge (Reflective Implementation)
     // ------------------------------------------------------------------
 
-    /**
-     * Registers {@link VaultEconomy} as a Bukkit economy service when Vault is
-     * present. VaultEconomy delegates every read/write directly to the existing
-     * {@link EconomyManager} and {@link DataStore}, so Vault consumers such as
-     * EconomyShopGUI see the same balances ElysiumCore manages.
-     *
-     * <p>Everything Vault-related is loaded reflectively, so the absence of VaultAPI on
-     * the server can never prevent ElysiumCore from enabling.</p>
-     */
     private void registerVaultEconomy() {
         if (getServer().getPluginManager().getPlugin("Vault") == null) {
             return;
@@ -269,11 +247,9 @@ public final class ElysiumCore extends JavaPlugin {
                     ServicePriority.Normal);
             getLogger().info("Registered ElysiumCore as a Vault economy provider.");
         } catch (ClassNotFoundException | NoSuchMethodException | InstantiationException
+
                 | IllegalAccessException | InvocationTargetException exception) {
-            // VaultAPI is not present, or the reflective setup failed; nothing we can
-            // register, and this must never prevent ElysiumCore from enabling.
             getLogger().warning("Vault economy registration skipped: " + exception.getMessage());
         }
     }
-
 }
