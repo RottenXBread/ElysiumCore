@@ -232,24 +232,30 @@ public final class ElysiumCore extends JavaPlugin {
     // Vault economy bridge (Reflective Implementation)
     // ------------------------------------------------------------------
 
-    private void registerVaultEconomy() {
+     private void registerVaultEconomy() {
         if (getServer().getPluginManager().getPlugin("Vault") == null) {
             return;
         }
         try {
             Class<?> vaultEconomyClass = Class.forName("com.elysium.core.economy.VaultEconomy");
             Constructor<?> constructor = vaultEconomyClass.getConstructor(
-                    ElysiumCore.class, EconomyManager.class);
-            Object provider = constructor.newInstance(this, economyManager);
-            Class<?> economyInterface = Class.forName("net.milkbowl.vault.economy.Economy");
+                    ElysiumCore.class, com.elysium.core.economy.EconomyManager.class);
+            Object provider = constructor.newInstance(this, this.economyManager);
+            
             getServer().getServicesManager().register(
-                    Objects.requireNonNull(economyInterface), provider, this,
-                    ServicePriority.Normal);
+                    net.milkbowl.vault.economy.Economy.class, 
+                    (net.milkbowl.vault.economy.Economy) provider, 
+                    this, 
+                    ServicePriority.Normal
+            );
             getLogger().info("Registered ElysiumCore as a Vault economy provider.");
         } catch (ClassNotFoundException | NoSuchMethodException | InstantiationException
 
                 | IllegalAccessException | InvocationTargetException exception) {
             getLogger().warning("Vault economy registration skipped: " + exception.getMessage());
+        }
+    }
+
         }
     }
 }
